@@ -19,8 +19,15 @@ var transactions = []transaction{
 	{ID: "2", Category: "Encontro", Description: "Taisho", Account: "BB", Value: 140},
 }
 
-func insertTransaction(t transaction) {
+func insertTransaction(t transaction) bool {
+	id := t.ID
+	for _, transaction := range transactions {
+		if transaction.ID == id {
+			return false
+		}
+	}
 	transactions = append(transactions, t)
+	return true
 }
 
 func getTransactions(c *gin.Context) {
@@ -29,11 +36,12 @@ func getTransactions(c *gin.Context) {
 
 func postTransaction(c *gin.Context) {
 	var newTransations transaction
-
 	c.BindJSON(&newTransations)
 
-	insertTransaction(newTransations)
-
+	if !insertTransaction(newTransations) {
+		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "transaction id already exists", "transaction": newTransations})
+		return
+	}
 	c.IndentedJSON(http.StatusOK, newTransations)
 }
 
