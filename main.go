@@ -34,6 +34,10 @@ func getTransactions(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, transactions)
 }
 
+func postTransactionFromFile(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, gin.H{"context": c})
+}
+
 func postTransaction(c *gin.Context) {
 	var newTransations transaction
 	c.BindJSON(&newTransations)
@@ -62,6 +66,7 @@ func main() {
 	router.GET("/transactions", getTransactions)
 	router.GET("/transactions/:id", getTransactionByID)
 	router.POST("/transactions", postTransaction)
+	router.POST("/transactions/fromFile", postTransactionFromFile)
 
 	router.Run("localhost:8080")
 }
