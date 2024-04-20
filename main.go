@@ -39,26 +39,35 @@ func postTransactionFromFile(c *gin.Context) {
 }
 
 func postTransaction(c *gin.Context) {
-	var newTransations transaction
-	c.BindJSON(&newTransations)
+	var newTransactions transaction
+	c.BindJSON(&newTransactions)
 
-	if !insertTransaction(newTransations) {
-		c.IndentedJSON(http.StatusNotFound, gin.H{"message": "transaction id already exists", "transaction": newTransations})
+	cat := c.DefaultQuery("cat", "sem categoria")
+	acc := c.DefaultQuery("acc", "bb")
+
+	newTransactions.Category = cat
+	newTransactions.Account = acc
+
+	if !insertTransaction(newTransactions) {
+		c.IndentedJSON(http.StatusNotFound,
+			gin.H{
+				"message": "transaction id already exists",
+				"transaction": newTransactions,
+		})
 		return
 	}
-	c.IndentedJSON(http.StatusOK, newTransations)
+	c.IndentedJSON(http.StatusOK, newTransactions)
 }
 
 func getTransactionByID(c *gin.Context) {
 	id := c.Param("id")
-
 	for _, transaction := range transactions {
 		if transaction.ID == id {
 			c.IndentedJSON(http.StatusOK, transaction)
 			return
 		}
 	}
-	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "transaction not"})
+	c.IndentedJSON(http.StatusNotFound, gin.H{"message": "transaction not found."})
 }
 
 func main() {
@@ -68,9 +77,9 @@ func main() {
 	router.POST("/transactions", postTransaction)
 	router.POST("/transactions/fromFile", postTransactionFromFile)
 
-	router.Run("localhost:8080")
+	router.Run(":8080")
 }
 
-// curl localhost:8080/transactions
-// curl localhost:8080/transactions/1
-// curl localhost:8080/transactions --include --request "POST" --header "Content-Type: application/json" --data '{"id":"3","cat":"Transporte","acc":"BB","val": 200,"desc":"Gasolina"}'
+// curl "localhost:8080/transactions"
+// curl "localhost:8080/transactions/1"
+// curl "localhost:8080/transactions" --include --request "PORT" --header "content-type: application/json" --data '{"id":"3","cat":"transporte","acc":"bb","val": 200,"desc":"gasolina"}'
