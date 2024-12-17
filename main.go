@@ -1,9 +1,17 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type transaction struct {
@@ -71,13 +79,52 @@ func getTransactionByID(c *gin.Context) {
 }
 
 func main() {
-	router := gin.Default()
-	router.GET("/transactions", getTransactions)
-	router.GET("/transactions/:id", getTransactionByID)
-	router.POST("/transactions", postTransaction)
-	router.POST("/transactions/fromFile", postTransactionFromFile)
+	uri := os.Getenv("MONGODB_URI")
 
-	router.Run(":8080")
+	log.Printf("using uri for mongo connection: %s\n", uri)
+
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	if err != nil {
+		panic(err)
+	}
+
+	defer func() {
+		if err = client.Disconnect(context.TODO()); err != nil {
+			panic(err)
+		}
+	}()
+
+	coll := client.Database("sample_mflix").Collection("comments")
+	name := "Mercedes Tyler"
+
+	log.Printf("Querying for %s", name)
+
+	var result bson.M
+	err = coll.FindOne(context.TODO(), bson.D{{"name", name}}).
+		Decode(&result)
+	if err == mongo.ErrNoDocuments {
+		fmt.Printf("could not find document %s\n", name)
+		return
+	}
+
+	jsonData, err := json.MarshalIndent(result, "", "    ")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Printf("%s\n", jsonData)
+	
+	fmt.Printf("%s\n", queryMongo())
+
+	// router := gin.Default()
+	// router.GET("/transactions", getTransactions)
+	// router.GET("/transactions/:id", getTransactionByID)
+	// router.POST("/transactions", postTransaction)
+	//
+	// router.Run("localhost:8080")
+}
+
+func queryMongo() string {
+	return "you queried me"
 }
 
 // curl "localhost:8080/transactions"
