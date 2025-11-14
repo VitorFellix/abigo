@@ -1,41 +1,27 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
-type transaction struct {
-	ID          string  `json:"id"`
-	Category    string  `json:"cat"`
-	Description string  `json:"desc"`
-	Account     string  `json:"acc"`
-	Value       float32 `json:"val"`
-}
-
-var transactions = []transaction{
-	{ID: "1", Category: "Transporte", Description: "Gasolina", Account: "BB", Value: 200},
-	{ID: "2", Category: "Encontro", Description: "Taisho", Account: "BB", Value: 140},
-}
-
-func insertTransaction(t transaction) bool {
+func insertTransaction(t Transaction) bool {
 	id := t.ID
-	for _, transaction := range transactions {
+	for _, transaction := range Transactions {
 		if transaction.ID == id {
 			return false
 		}
 	}
-	transactions = append(transactions, t)
+	Transactions = append(Transactions, t)
 	return true
 }
 
 func getTransactions(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, transactions)
+	c.IndentedJSON(http.StatusOK, Transactions)
 }
 
 func postTransaction(c *gin.Context) {
-	var newTransations transaction
+	var newTransations Transaction
 	c.BindJSON(&newTransations)
 
 	if !insertTransaction(newTransations) {
@@ -48,7 +34,7 @@ func postTransaction(c *gin.Context) {
 func getTransactionByID(c *gin.Context) {
 	id := c.Param("id")
 
-	for _, transaction := range transactions {
+	for _, transaction := range Transactions {
 		if transaction.ID == id {
 			c.IndentedJSON(http.StatusOK, transaction)
 			return
